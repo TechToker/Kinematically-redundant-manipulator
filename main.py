@@ -98,18 +98,24 @@ def dTz(z):
     return T
 
 
-link_length = [1, 1, 1, 1]
+link_length = [0.140, 0.200, 0.200, 0.200, 0.200, 0.200, 0.126]
 
 
 def FK(q, links):
-    T = np.linalg.multi_dot([Rz(q[0]),
-                             Tx(links[0]),
-                             Rz(q[1]),
-                             Tx(links[1]),
+    T = np.linalg.multi_dot([Tz(links[0]),
+                             Rz(q[0]),
+                             Tz(links[1]),
+                             Ry(q[1]),
+                             Tz(links[2]),
                              Rz(q[2]),
-                             Tx(links[2]),
-                             Rz(q[3]),
-                             Tx(links[3])])
+                             Tz(links[3]),
+                             Ry(q[3]),
+                             Tz(links[4]),
+                             Rz(q[4]),
+                             Tz(links[5]),
+                             Ry(q[5]),
+                             Tz(links[6]),
+                             Rz(q[6])])
 
     return T
 
@@ -124,107 +130,230 @@ def JacobianVirtual(q, links):
     T[0:3, 3] = 0
     T_inv = np.transpose(T)
 
-    dT = np.linalg.multi_dot([dRz(q[0]),
-                              Tx(links[0]),
-                              Rz(q[1]),
-                              Tx(links[1]),
-                              Rz(q[2]),
-                              Tx(links[2]),
-                              Rz(q[3]),
-                              Tx(links[3])])
+    dT = np.linalg.multi_dot([Tz(links[0]),
+                             dRz(q[0]),
+                             Tz(links[1]),
+                             Ry(q[1]),
+                             Tz(links[2]),
+                             Rz(q[2]),
+                             Tz(links[3]),
+                             Ry(q[3]),
+                             Tz(links[4]),
+                             Rz(q[4]),
+                             Tz(links[5]),
+                             Ry(q[5]),
+                             Tz(links[6]),
+                             Rz(q[6])])
 
     dT = np.linalg.multi_dot([dT, T_inv])
     J1 = np.vstack([dT[0, 3], dT[1, 3], dT[2, 3], dT[2, 1], dT[0, 2], dT[1, 0]])
 
-    dT = np.linalg.multi_dot([Rz(q[0]),
-                              Tx(links[0]),
-                              dRz(q[1]),
-                              Tx(links[1]),
-                              Rz(q[2]),
-                              Tx(links[2]),
-                              Rz(q[3]),
-                              Tx(links[3])])
+    dT = np.linalg.multi_dot([Tz(links[0]),
+                             Rz(q[0]),
+                             Tz(links[1]),
+                             dRy(q[1]),
+                             Tz(links[2]),
+                             Rz(q[2]),
+                             Tz(links[3]),
+                             Ry(q[3]),
+                             Tz(links[4]),
+                             Rz(q[4]),
+                             Tz(links[5]),
+                             Ry(q[5]),
+                             Tz(links[6]),
+                             Rz(q[6])])
+
 
     dT = np.linalg.multi_dot([dT, T_inv])
     J2 = np.vstack([dT[0, 3], dT[1, 3], dT[2, 3], dT[2, 1], dT[0, 2], dT[1, 0]])
 
-    dT = np.linalg.multi_dot([Rz(q[0]),
-                              Tx(links[0]),
-                              Rz(q[1]),
-                              Tx(links[1]),
-                              dRz(q[2]),
-                              Tx(links[2]),
-                              Rz(q[3]),
-                              Tx(links[3])])
+    dT = np.linalg.multi_dot([Tz(links[0]),
+                             Rz(q[0]),
+                             Tz(links[1]),
+                             Ry(q[1]),
+                             Tz(links[2]),
+                             dRz(q[2]),
+                             Tz(links[3]),
+                             Ry(q[3]),
+                             Tz(links[4]),
+                             Rz(q[4]),
+                             Tz(links[5]),
+                             Ry(q[5]),
+                             Tz(links[6]),
+                             Rz(q[6])])
+
 
     dT = np.linalg.multi_dot([dT, T_inv])
     J3 = np.vstack([dT[0, 3], dT[1, 3], dT[2, 3], dT[2, 1], dT[0, 2], dT[1, 0]])
 
-    dT = np.linalg.multi_dot([Rz(q[0]),
-                              Tx(links[0]),
-                              Rz(q[1]),
-                              Tx(links[1]),
-                              Rz(q[2]),
-                              Tx(links[2]),
-                              dRz(q[3]),
-                              Tx(links[3])])
+    dT = np.linalg.multi_dot([Tz(links[0]),
+                             Rz(q[0]),
+                             Tz(links[1]),
+                             Ry(q[1]),
+                             Tz(links[2]),
+                             Rz(q[2]),
+                             Tz(links[3]),
+                             dRy(q[3]),
+                             Tz(links[4]),
+                             Rz(q[4]),
+                             Tz(links[5]),
+                             Ry(q[5]),
+                             Tz(links[6]),
+                             Rz(q[6])])
 
     dT = np.linalg.multi_dot([dT, T_inv])
     J4 = np.vstack([dT[0, 3], dT[1, 3], dT[2, 3], dT[2, 1], dT[0, 2], dT[1, 0]])
 
-    J = np.hstack([J1, J2, J3, J4])
+    dT = np.linalg.multi_dot([Tz(links[0]),
+                             Rz(q[0]),
+                             Tz(links[1]),
+                             Ry(q[1]),
+                             Tz(links[2]),
+                             Rz(q[2]),
+                             Tz(links[3]),
+                             Ry(q[3]),
+                             Tz(links[4]),
+                             dRz(q[4]),
+                             Tz(links[5]),
+                             Ry(q[5]),
+                             Tz(links[6]),
+                             Rz(q[6])])
+
+    dT = np.linalg.multi_dot([dT, T_inv])
+    J5 = np.vstack([dT[0, 3], dT[1, 3], dT[2, 3], dT[2, 1], dT[0, 2], dT[1, 0]])
+
+    dT = np.linalg.multi_dot([Tz(links[0]),
+                             Rz(q[0]),
+                             Tz(links[1]),
+                             Ry(q[1]),
+                             Tz(links[2]),
+                             Rz(q[2]),
+                             Tz(links[3]),
+                             Ry(q[3]),
+                             Tz(links[4]),
+                             Rz(q[4]),
+                             Tz(links[5]),
+                             dRy(q[5]),
+                             Tz(links[6]),
+                             Rz(q[6])])
+
+    dT = np.linalg.multi_dot([dT, T_inv])
+    J6 = np.vstack([dT[0, 3], dT[1, 3], dT[2, 3], dT[2, 1], dT[0, 2], dT[1, 0]])
+
+    dT = np.linalg.multi_dot([Tz(links[0]),
+                             Rz(q[0]),
+                             Tz(links[1]),
+                             Ry(q[1]),
+                             Tz(links[2]),
+                             Rz(q[2]),
+                             Tz(links[3]),
+                             Ry(q[3]),
+                             Tz(links[4]),
+                             Rz(q[4]),
+                             Tz(links[5]),
+                             Ry(q[5]),
+                             Tz(links[6]),
+                             dRz(q[6])])
+
+    dT = np.linalg.multi_dot([dT, T_inv])
+    J7 = np.vstack([dT[0, 3], dT[1, 3], dT[2, 3], dT[2, 1], dT[0, 2], dT[1, 0]])
+
+    J = np.hstack([J1, J2, J3, J4, J5, J6, J7])
     return J
 
 
-def PlotFK(q, links):
-    pos0 = [0, 0]
+ax = plt.axes(projection='3d')
 
-    T = np.linalg.multi_dot([Rz(q[0]),
-                             Tx(links[0])])
+
+def PlotFK(q, links, color='b'):
+    pos0 = [0, 0, 0]
+
+    T = Tz(links[0])
 
     pos1 = T[0:3, 3]
 
-    T = np.linalg.multi_dot([Rz(q[0]),
-                             Tx(links[0]),
-                             Rz(q[1]),
-                             Tx(links[1])])
+    T = np.linalg.multi_dot([Tz(links[0]),
+                             Rz(q[0]),
+                             Tz(links[1])])
 
     pos2 = T[0:3, 3]
 
-    T = np.linalg.multi_dot([Rz(q[0]),
-                             Tx(links[0]),
-                             Rz(q[1]),
-                             Tx(links[1]),
-                             Rz(q[2]),
-                             Tx(links[2])])
-
+    T = np.linalg.multi_dot([Tz(links[0]),
+                             Rz(q[0]),
+                             Tz(links[1]),
+                             Ry(q[1]),
+                             Tz(links[2])])
     pos3 = T[0:3, 3]
 
-    T = np.linalg.multi_dot([Rz(q[0]),
-                             Tx(links[0]),
-                             Rz(q[1]),
-                             Tx(links[1]),
+    T = np.linalg.multi_dot([Tz(links[0]),
+                             Rz(q[0]),
+                             Tz(links[1]),
+                             Ry(q[1]),
+                             Tz(links[2]),
                              Rz(q[2]),
-                             Tx(links[2]),
-                             Rz(q[3]),
-                             Tx(links[3])])
+                             Tz(links[3])])
 
     pos4 = T[0:3, 3]
-    print(f"End-effector pos: {pos4}")
 
-    x = [pos0[0], pos1[0], pos2[0], pos3[0], pos4[0]]
-    y = [pos0[1], pos1[1], pos2[1], pos3[1], pos4[1]]
+    T = np.linalg.multi_dot([Tz(links[0]),
+                             Rz(q[0]),
+                             Tz(links[1]),
+                             Ry(q[1]),
+                             Tz(links[2]),
+                             Rz(q[2]),
+                             Tz(links[3]),
+                             Ry(q[3]),
+                             Tz(links[4])])
 
-    plt.xlim(-3, 3)
-    plt.ylim(-3.25, 3.25)
-    plt.plot(x, y)
-    plt.scatter(x, y)
+    pos5 = T[0:3, 3]
+
+    T = np.linalg.multi_dot([Tz(links[0]),
+                             Rz(q[0]),
+                             Tz(links[1]),
+                             Ry(q[1]),
+                             Tz(links[2]),
+                             Rz(q[2]),
+                             Tz(links[3]),
+                             Ry(q[3]),
+                             Tz(links[4]),
+                             Rz(q[4]),
+                             Tz(links[5])])
+
+    pos6 = T[0:3, 3]
+
+
+    T = np.linalg.multi_dot([Tz(links[0]),
+                             Rz(q[0]),
+                             Tz(links[1]),
+                             Ry(q[1]),
+                             Tz(links[2]),
+                             Rz(q[2]),
+                             Tz(links[3]),
+                             Ry(q[3]),
+                             Tz(links[4]),
+                             Rz(q[4]),
+                             Tz(links[5]),
+                             Ry(q[5]),
+                             Tz(links[6]),
+                             Rz(q[6])])
+
+    pos7 = T[0:3, 3]
+
+    print(f"End-effector pos: {pos7}")
+
+    x = [pos0[0], pos1[0], pos2[0], pos3[0], pos4[0], pos5[0], pos6[0], pos7[0]]
+    y = [pos0[1], pos1[1], pos2[1], pos3[1], pos4[1], pos5[1], pos6[1], pos7[1]]
+    z = [pos0[2], pos1[2], pos2[2], pos3[2], pos4[2], pos5[2], pos6[2], pos7[2]]
+
+    ax.set_xlim(-0.5, 0.5)
+    ax.set_ylim(-0.5, 0.5)
+    ax.set_zlim(0, 1)
+
+    ax.plot3D(x, y, z, linewidth=3, c=color)
+    ax.scatter3D(x, y, z, s=25, c='lightcoral')
 
 
 # Print first fk
-r_global = np.array([1, 3, 0, 0, 0, 0])
-PlotFK([0, np.pi / 2, 0, 0], link_length)
-
 
 def WeightedPseudoInv(q_current, weighs):
     i = 0
@@ -239,12 +368,15 @@ def WeightedPseudoInv(q_current, weighs):
         d_error = error / 100
 
         jac = JacobianVirtual(q_current, link_length)
-        J_wgh_1 = np.linalg.multi_dot([np.linalg.inv(weighs), np.transpose(jac)])
-        J_wgh_2 = np.linalg.multi_dot([jac, np.linalg.inv(weighs), np.transpose(jac)])
+        print(jac.shape)
+
+        J_wgh_1 = np.linalg.multi_dot([np.linalg.pinv(weighs), np.transpose(jac)])
+        J_wgh_2 = np.linalg.multi_dot([jac, np.linalg.pinv(weighs), np.transpose(jac)])
 
         J_wgh = np.linalg.multi_dot([J_wgh_1, np.linalg.pinv(J_wgh_2)])
 
         delta_q = np.dot(J_wgh, d_error)
+        print(delta_q.shape)
 
         q_current = q_current + delta_q
         i += 1
@@ -252,11 +384,44 @@ def WeightedPseudoInv(q_current, weighs):
     return q_current
 
 
-q_start = np.array([np.pi / 6, np.pi / 2, -np.pi / 6, 0])
-weighs_pseudo_inv = np.diag([0.01, 1000, 1000, 1000])
+def DLS(q_current, links_length):
+    i = 0
+    error = [10, 10, 10, 10, 10, 10]
+
+    nu = 0.1
+    Im = np.ones(6)
+
+    for i in range (0, 1000):
+    #while abs(sum(error[0:3])) > 0.01 or i < 2:
+        r_current = FK(q_current, link_length)
+        r_current = np.hstack([r_current[0:3, 3], [0, 0, 0]])
+
+        error = r_global - r_current
+        print(f"[{i}] Error sum: {round(sum(error[0:3]), 4)}")
+        d_error = error / 100
+
+        J = JacobianVirtual(q_current, links_length)
+        J_pinv = np.dot(np.transpose(J), np.linalg.pinv(np.dot(J, np.transpose(J))+nu**2 * Im))
+
+        delta_q = np.dot(J_pinv, d_error)
+
+        q_current = q_current + delta_q
+        i += 1
+
+    return q_current
+
+
+PlotFK([np.pi / 2, np.pi / 2, np.pi / 2, np.pi / 2, np.pi / 2, np.pi / 2, np.pi / 2], link_length)
+
+r_global = np.array([-0.4, 0.4, 0.466, 0, 0, 0])
+
+q_start = np.array([0, 0, 0, 0, 0, 0, 0])
+weighs_pseudo_inv = np.diag([1, 1, 1, 1, 1, 1, 1])
 
 q_final = WeightedPseudoInv(q_start, weighs_pseudo_inv)
 
+#q_final = DLS(q_start, link_length)
+
 # Print second fk
-PlotFK(q_final, link_length)
+PlotFK(q_final, link_length, 'r')
 plt.show()
