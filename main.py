@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
+
 def Rx(q):
     T = np.array([[1, 0, 0, 0],
                   [0, np.cos(q), -np.sin(q), 0],
@@ -175,7 +176,7 @@ def JacobianVirtual(q, links):
     return J
 
 
-def Visualize(q, links):
+def PlotFK(q, links):
     pos0 = [0, 0]
 
     T = np.linalg.multi_dot([Rz(q[0]),
@@ -219,40 +220,43 @@ def Visualize(q, links):
     plt.plot(x, y)
     plt.scatter(x, y)
 
+
 # Print first fk
 r_global = np.array([1, 3, 0, 0, 0, 0])
-q_current = np.array([0, 0, 0, 0])
+PlotFK([0, np.pi / 2, 0, 0], link_length)
 
-Visualize([0, np.pi / 2, 0, 0], link_length)
-error = [10, 10, 10, 10, 10, 10]
 
-# Wheighted pseudo-inv
+def WeightedPseudoInv(q_current, weighs):
+    i = 0
+    error = [10, 10, 10, 10, 10, 10]
 
-q_current = np.array([np.pi / 6, np.pi / 2, -np.pi / 6, 0])
-i = 0
+    while abs(sum(error[0:3])) > 0.01 or i < 2:
+        r_current = FK(q_current, link_length)
+        r_current = np.hstack([r_current[0:3, 3], [0, 0, 0]])
 
-weighs = np.diag([0.01, 1000, 1000, 1000])
+        error = r_global - r_current
+        print(f"[{i}] Error sum: {round(sum(error[0:3]), 4)}")
+        d_error = error / 100
 
-while abs(sum(error[0:3])) > 0.01 or i < 2:
-    r_current = FK(q_current, link_length)
-    r_current = np.hstack([r_current[0:3, 3], [0, 0, 0]])
+        jac = JacobianVirtual(q_current, link_length)
+        J_wgh_1 = np.linalg.multi_dot([np.linalg.inv(weighs), np.transpose(jac)])
+        J_wgh_2 = np.linalg.multi_dot([jac, np.linalg.inv(weighs), np.transpose(jac)])
 
-    error = r_global - r_current
-    print(f"error: {sum(error[0:3])}")
-    d_error = error / 100
+        J_wgh = np.linalg.multi_dot([J_wgh_1, np.linalg.pinv(J_wgh_2)])
 
-    jac = JacobianVirtual(q_current, link_length)
-    J_wgh_1 = np.linalg.multi_dot([np.linalg.inv(weighs), np.transpose(jac)])
-    J_wgh_2 = np.linalg.multi_dot([jac, np.linalg.inv(weighs), np.transpose(jac)])
+        delta_q = np.dot(J_wgh, d_error)
 
-    J_wgh = np.linalg.multi_dot([J_wgh_1, np.linalg.pinv(J_wgh_2)])
+        q_current = q_current + delta_q
+        i += 1
 
-    delta_q = np.dot(J_wgh, d_error)
+    return q_current
 
-    q_current = q_current + delta_q
-    i += 1
 
-print(i)
+q_start = np.array([np.pi / 6, np.pi / 2, -np.pi / 6, 0])
+weighs_pseudo_inv = np.diag([0.01, 1000, 1000, 1000])
+
+q_final = WeightedPseudoInv(q_start, weighs_pseudo_inv)
+
 # Print second fk
-Visualize(q_current, link_length)
+PlotFK(q_final, link_length)
 plt.show()
