@@ -226,25 +226,6 @@ q_current = np.array([0, 0, 0, 0])
 Visualize([0, np.pi / 2, 0, 0], link_length)
 error = [10, 10, 10, 10, 10, 10]
 
-# Pseudo-inverse
-i = 0
-# while abs(sum(error[0:3])) > 0.01 or i < 2:
-#     r_current = FK(q_current, link_length)
-#     r_current = np.hstack([r_current[0:3, 3], [0, 0, 0]])
-#
-#     error = r_global - r_current
-#     print(f"error: {sum(error[0:3])}")
-#     d_error = error / 100
-#
-#     J_pinv = np.linalg.pinv(JacobianVirtual(q_current, link_length))
-#     delta_q = np.dot(J_pinv, d_error)
-#
-#     q_current = q_current + delta_q
-#     i += 1
-#
-# # Print second fk
-# Visualize(q_current, link_length)
-
 # Wheighted pseudo-inv
 
 q_current = np.array([np.pi / 6, np.pi / 2, -np.pi / 6, 0])
