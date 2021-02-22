@@ -1,4 +1,5 @@
 import numpy as np
+from math import *
 import matplotlib.pyplot as plt
 
 
@@ -411,16 +412,102 @@ def DLS(q_current, links_length):
     return q_current
 
 
+def GetH(jacob):
+    H = np.sqrt(np.linalg.det(np.linalg.multi_dot([jacob, np.transpose(jacob)])))
+    return H
+
+def NullSpace(q_current, links_length):
+    i = 0
+    error = [10, 10, 10, 10, 10, 10]
+
+    nu = 0.1
+    Im = np.ones(6)
+
+    for i in range (0, 1000):
+    #while abs(sum(error[0:3])) > 0.01 or i < 2:
+        r_current = FK(q_current, link_length)
+        r_current = np.hstack([r_current[0:3, 3], [0, 0, 0]])
+
+        error = r_global - r_current
+        print(f"[{i}] Error sum: {sum(error[0:3])}")
+        d_error = error / 100
+
+        jac = JacobianVirtual(q_current, links_length)
+        jac_pinv = np.linalg.pinv(jac)
+
+        H_init = GetH(jac)
+
+        delta_q = 0.001
+
+        v1 = q_current.copy()
+        v1[0] += delta_q
+        j1 = JacobianVirtual(v1, links_length)
+        H1 = GetH(j1)
+        q_dot_zero_1 = (H1 - H_init) / delta_q
+
+        v2 = q_current.copy()
+        v2[1] += delta_q
+        j2 = JacobianVirtual(v2, links_length)
+        H2 = GetH(j2)
+        q_dot_zero_2 = (H2 - H_init) / delta_q
+
+        v3 = q_current.copy()
+        v3[2] += delta_q
+        j3 = JacobianVirtual(v3, links_length)
+        H3 = GetH(j3)
+        q_dot_zero_3 = (H3 - H_init) / delta_q
+
+        v4 = q_current.copy()
+        v4[3] += delta_q
+        j4 = JacobianVirtual(v4, links_length)
+        H4 = GetH(j4)
+        q_dot_zero_4 = (H4 - H_init) / delta_q
+
+        v5 = q_current.copy()
+        v5[4] += delta_q
+        j5 = JacobianVirtual(v5, links_length)
+        H5 = GetH(j5)
+        q_dot_zero_5 = (H5 - H_init) / delta_q
+
+        v6 = q_current.copy()
+        v6[5] += delta_q
+        j6 = JacobianVirtual(v6, links_length)
+        H6 = GetH(j6)
+        q_dot_zero_6 = (H6 - H_init) / delta_q
+
+        v7 = q_current.copy()
+        v7[6] += delta_q
+        j7 = JacobianVirtual(v7, links_length)
+        H7 = GetH(j7)
+        q_dot_zero_7 = (H7 - H_init) / delta_q
+
+        q0 = np.hstack([q_dot_zero_1, q_dot_zero_2, q_dot_zero_3, q_dot_zero_4, q_dot_zero_5, q_dot_zero_6, q_dot_zero_7])
+
+        term01 = np.dot(jac_pinv, jac)
+
+        Im = np.ones((7, 7))
+        term0 = Im - term01
+
+        delta_q = np.dot(jac_pinv, d_error) + np.dot(term0, q0)
+
+        q_current = q_current + delta_q
+        i += 1
+
+    return q_current
+
+
 PlotFK([np.pi / 2, np.pi / 2, np.pi / 2, np.pi / 2, np.pi / 2, np.pi / 2, np.pi / 2], link_length)
 
 r_global = np.array([-0.4, 0.4, 0.466, 0, 0, 0])
 
-q_start = np.array([0, 0, 0, 0, 0, 0, 0])
+q_start = np.array([0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1])
 weighs_pseudo_inv = np.diag([1, 1, 1, 1, 1, 1, 1])
 
-q_final = WeightedPseudoInv(q_start, weighs_pseudo_inv)
+#q_final = WeightedPseudoInv(q_start, weighs_pseudo_inv)
 
 #q_final = DLS(q_start, link_length)
+
+q_final = NullSpace(q_start, link_length)
 
 # Print second fk
 PlotFK(q_final, link_length, 'r')
