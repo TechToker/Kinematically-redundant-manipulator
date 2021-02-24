@@ -390,13 +390,11 @@ def TaskPrior(q_current):
     error = [10, 10, 10, 10, 10, 10]
 
     #r_global_fix = r_global
-    r_global_fix = np.hstack([r_global, [r_global[0], r_global[1], r_global[2], 0, np.pi/2, 0]])
+    r_global_fix = np.hstack([r_global, [r_global[0], r_global[1], r_global[2], np.pi/2, 0, 0]])
 
     while abs(sum(error[:])) > 0.01 or i < 2:
         r_current = FK(q_current, link_length)
-        r_current = np.hstack([r_current[0:3, 3], [0, 0, 0], r_current[0:3, 3], [0, np.pi/2, 0]])
-
-        # r_current = np.hstack([r_current, [0, 0, 0, 0, np.pi/2, 0]])
+        r_current = np.hstack([r_current[0:3, 3], [0, 0, 0], r_current[0:3, 3], [np.pi/2, 0, 0]])
 
         error = r_global_fix - r_current
         print(f"[{i}] Error sum: {round(sum(error[:]), 4)}")
@@ -405,7 +403,6 @@ def TaskPrior(q_current):
         jac1 = JacobianVirtual(q_current, link_length)
 
         q_need = q_current
-        q_need[5] = np.pi/2
         jac2 = JacobianVirtual(q_need, link_length)
 
         J_full = np.vstack([jac1, jac2])
@@ -511,23 +508,42 @@ def NullSpace(q_current, links_length):
 
 trajectory_points = 5
 
+# trajectory_x = []
+# trajectory_x.extend(np.linspace(-0.25, 0.25, num=trajectory_points))
+# trajectory_x.extend([0.25] * trajectory_points)
+# trajectory_x.extend(np.linspace(0.25, -0.25, num=trajectory_points))
+# trajectory_x.extend([-0.25] * trajectory_points)
+#
+# trajectory_y = []
+# trajectory_y.extend([0.65] * trajectory_points)
+# trajectory_y.extend([0.65] * trajectory_points)
+# trajectory_y.extend([0.65] * trajectory_points)
+# trajectory_y.extend([0.65] * trajectory_points)
+#
+# trajectory_z = []
+# trajectory_z.extend([0.1] * trajectory_points)
+# trajectory_z.extend(np.linspace(0.1, 0.65, num=trajectory_points))
+# trajectory_z.extend([0.65] * trajectory_points)
+# trajectory_z.extend(np.linspace(0.65, 0.1, num=trajectory_points))
+
+
 trajectory_x = []
 trajectory_x.extend(np.linspace(-0.25, 0.25, num=trajectory_points))
 trajectory_x.extend([0.25] * trajectory_points)
 trajectory_x.extend(np.linspace(0.25, -0.25, num=trajectory_points))
 trajectory_x.extend([-0.25] * trajectory_points)
 
-trajectory_y = []
-trajectory_y.extend([0.65] * trajectory_points)
-trajectory_y.extend([0.65] * trajectory_points)
-trajectory_y.extend([0.65] * trajectory_points)
-trajectory_y.extend([0.65] * trajectory_points)
-
 trajectory_z = []
-trajectory_z.extend([0.1] * trajectory_points)
-trajectory_z.extend(np.linspace(0.1, 0.65, num=trajectory_points))
-trajectory_z.extend([0.65] * trajectory_points)
-trajectory_z.extend(np.linspace(0.65, 0.1, num=trajectory_points))
+trajectory_z.extend([1.1] * trajectory_points)
+trajectory_z.extend([1.1] * trajectory_points)
+trajectory_z.extend([1.1] * trajectory_points)
+trajectory_z.extend([1.1] * trajectory_points)
+
+trajectory_y = []
+trajectory_y.extend([0.25] * trajectory_points)
+trajectory_y.extend(np.linspace(-0.25, 0.25, num=trajectory_points))
+trajectory_y.extend([-0.25] * trajectory_points)
+trajectory_y.extend(np.linspace(0.25, -0.25, num=trajectory_points))
 
 trajectory_x = np.array(trajectory_x)
 trajectory_y = np.array(trajectory_y)
