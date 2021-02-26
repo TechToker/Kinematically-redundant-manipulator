@@ -266,7 +266,7 @@ def JacobianVirtual(q, links):
 ax = plt.axes(projection='3d')
 
 
-def PlotFK(q, links, color='b'):
+def PlotFK(q, links, color='b', linewidth=3):
     pos0 = [0, 0, 0]
 
     T = Tz(links[0])
@@ -350,7 +350,7 @@ def PlotFK(q, links, color='b'):
     ax.set_ylim(-0.5, 0.5)
     ax.set_zlim(0, 1)
 
-    ax.plot3D(x, y, z, linewidth=0.5, c=color)
+    ax.plot3D(x, y, z, linewidth=linewidth, c=color)
     #ax.scatter3D(x, y, z, s=25, c='lightcoral')
 
 
@@ -382,10 +382,13 @@ def WeightedPseudoInv(q_current, weighs):
         q_current = q_current + delta_q
         i += 1
 
+        if i % 20 == 0:
+            PlotFK(q_current, link_length, color="black", linewidth=0.2)
+
     return q_current
 
 
-def TaskPrior(q_current):
+def TaskPrior(q_current, r_global):
     i = 0
     error = [10, 10, 10, 10, 10, 10]
 
@@ -416,7 +419,7 @@ def TaskPrior(q_current):
     return q_current
 
 
-def DLS(q_current, links_length):
+def DLS(q_current, r_global, links_length):
     i = 0
     error = [10, 10, 10, 10, 10, 10]
 
@@ -440,6 +443,9 @@ def DLS(q_current, links_length):
         q_current = q_current + delta_q
         i += 1
 
+        if i % 20 == 0:
+            PlotFK(q_current, links_length, color="black", linewidth=0.2)
+
     return q_current
 
 
@@ -447,16 +453,13 @@ def GetH(jacob):
     H = np.sqrt(np.linalg.det(np.linalg.multi_dot([jacob, np.transpose(jacob)])))
     return H
 
-def NullSpace(q_current, links_length):
-    PlotFK(q_current, links_length, color="black")
+
+def NullSpace(q_current, r_global, links_length):
+    #PlotFK(q_current, links_length, color="black")
 
     i = 0
     error = [10, 10, 10, 10, 10, 10]
 
-    nu = 0.1
-    Im = np.ones(6)
-
-    #for i in range (0, 50):
     while abs(sum(error[0:3])) > 0.01 or i < 2:
         r_current = FK(q_current, link_length)
         r_current = np.hstack([r_current[0:3, 3], [0, 0, 0]])
@@ -498,88 +501,91 @@ def NullSpace(q_current, links_length):
         q_current = q_current + delta_q
         i += 1
 
-        if i == 1:
-            PlotFK(q_current, links_length, color="pink")
-
-        if i % 50 == 0:
-            PlotFK(q_current, links_length, color="green")
+        if i % 20 == 0:
+            PlotFK(q_current, links_length, color="black", linewidth=0.2)
 
     return q_current
 
-trajectory_points = 5
 
-# trajectory_x = []
-# trajectory_x.extend(np.linspace(-0.25, 0.25, num=trajectory_points))
-# trajectory_x.extend([0.25] * trajectory_points)
-# trajectory_x.extend(np.linspace(0.25, -0.25, num=trajectory_points))
-# trajectory_x.extend([-0.25] * trajectory_points)
-#
-# trajectory_y = []
-# trajectory_y.extend([0.65] * trajectory_points)
-# trajectory_y.extend([0.65] * trajectory_points)
-# trajectory_y.extend([0.65] * trajectory_points)
-# trajectory_y.extend([0.65] * trajectory_points)
-#
-# trajectory_z = []
-# trajectory_z.extend([0.1] * trajectory_points)
-# trajectory_z.extend(np.linspace(0.1, 0.65, num=trajectory_points))
-# trajectory_z.extend([0.65] * trajectory_points)
-# trajectory_z.extend(np.linspace(0.65, 0.1, num=trajectory_points))
+def TaskAugmentation():
+    trajectory_points = 5
 
+    trajectory_x = []
+    trajectory_x.extend(np.linspace(-0.25, 0.25, num=trajectory_points))
+    trajectory_x.extend([0.25] * trajectory_points)
+    trajectory_x.extend(np.linspace(0.25, -0.25, num=trajectory_points))
+    trajectory_x.extend([-0.25] * trajectory_points)
 
-trajectory_x = []
-trajectory_x.extend(np.linspace(-0.25, 0.25, num=trajectory_points))
-trajectory_x.extend([0.25] * trajectory_points)
-trajectory_x.extend(np.linspace(0.25, -0.25, num=trajectory_points))
-trajectory_x.extend([-0.25] * trajectory_points)
+    trajectory_z = []
+    trajectory_z.extend([1.1] * trajectory_points)
+    trajectory_z.extend([1.1] * trajectory_points)
+    trajectory_z.extend([1.1] * trajectory_points)
+    trajectory_z.extend([1.1] * trajectory_points)
 
-trajectory_z = []
-trajectory_z.extend([1.1] * trajectory_points)
-trajectory_z.extend([1.1] * trajectory_points)
-trajectory_z.extend([1.1] * trajectory_points)
-trajectory_z.extend([1.1] * trajectory_points)
+    trajectory_y = []
+    trajectory_y.extend([0.25] * trajectory_points)
+    trajectory_y.extend(np.linspace(-0.25, 0.25, num=trajectory_points))
+    trajectory_y.extend([-0.25] * trajectory_points)
+    trajectory_y.extend(np.linspace(0.25, -0.25, num=trajectory_points))
 
-trajectory_y = []
-trajectory_y.extend([0.25] * trajectory_points)
-trajectory_y.extend(np.linspace(-0.25, 0.25, num=trajectory_points))
-trajectory_y.extend([-0.25] * trajectory_points)
-trajectory_y.extend(np.linspace(0.25, -0.25, num=trajectory_points))
+    trajectory_x = np.array(trajectory_x)
+    trajectory_y = np.array(trajectory_y)
+    trajectory_z = np.array(trajectory_z)
 
-trajectory_x = np.array(trajectory_x)
-trajectory_y = np.array(trajectory_y)
-trajectory_z = np.array(trajectory_z)
+    ax.scatter3D(trajectory_x, trajectory_y, trajectory_z, s=25, c='blue')
 
-ax.scatter3D(trajectory_x, trajectory_y, trajectory_z, s=25, c='blue')
+    q_start = np.array([-0.04208818, -2.16033204, 1.88463568, 1.45515167, 2.47635915, -1.78764181, -1.01590906])
 
+    for i in range(len(trajectory_x)):
+        print(trajectory_x.shape)
+        print(trajectory_x[i])
+
+        r_global = np.array([trajectory_x[i], trajectory_y[i], trajectory_z[i], 0, 0, 0])
+        q_final = TaskPrior(q_start, r_global)
+
+        PlotFK(q_final, link_length, 'r')
+
+# Weighted pseudo inv
+PlotFK([np.pi / 2, np.pi / 2, np.pi / 2, np.pi / 2, np.pi / 2, np.pi / 2, np.pi / 2], link_length, color="blue")
+
+r_global = np.array([-0.4, 0.4, 0.466, 0, 0, 0])
+q_start = np.array([0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01])
 weighs_pseudo_inv = np.diag([1, 1, 1, 1, 1, 1, 1])
 
-q_start = np.array([-0.04208818, -2.16033204,  1.88463568,  1.45515167,  2.47635915, -1.78764181, -1.01590906])
+q_final = WeightedPseudoInv(q_start, weighs_pseudo_inv)
+PlotFK(q_final, link_length, 'r')
 
-for i in range(len(trajectory_x)):
-    print(trajectory_x.shape)
-    print(trajectory_x[i])
-
-    r_global = np.array([trajectory_x[i], trajectory_y[i], trajectory_z[i], 0, 0, 0])
-    q_final = TaskPrior(q_start)
-
-    PlotFK(q_final, link_length, 'r')
-
-#PlotFK([np.pi / 2, np.pi / 2, np.pi / 2, np.pi / 2, np.pi / 2, np.pi / 2, np.pi / 2], link_length, color="blue")
-
-
-
-#r_global = np.array([-0.4, 0.4, 0.466, 0, 0, 0])
-
-
-#weighs_pseudo_inv = np.diag([1, 1, 1, 1, 1, 1, 1])
-
-#q_final = WeightedPseudoInv(q_start, weighs_pseudo_inv)
-
-#q_final = DLS(q_start, link_length)
-
-#q_final = NullSpace(q_start, link_length)
-
-# Print second fk
-#PlotFK(q_final, link_length, 'r')
+ax.set_title('Weighted pseudo inv')
 plt.show()
 
+
+# Damped least squares
+PlotFK([np.pi / 2, np.pi / 2, np.pi / 2, np.pi / 2, np.pi / 2, np.pi / 2, np.pi / 2], link_length, color="blue")
+
+r_global = np.array([-0.4, 0.4, 0.466, 0, 0, 0])
+q_start = np.array([0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01])
+
+q_final = DLS(q_start, r_global, link_length)
+PlotFK(q_final, link_length, 'r')
+
+ax.set_title('Damped least squares')
+plt.show()
+
+
+# NullSpace
+PlotFK([np.pi / 2, np.pi / 2, np.pi / 2, np.pi / 2, np.pi / 2, np.pi / 2, np.pi / 2], link_length, color="blue")
+
+r_global = np.array([-0.4, 0.4, 0.466, 0, 0, 0])
+q_start = np.array([0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01])
+
+q_final = NullSpace(q_start, r_global, link_length)
+PlotFK(q_final, link_length, 'r')
+
+ax.set_title('NullSpace')
+plt.show()
+
+
+# Task augmentation
+TaskAugmentation()
+ax.set_title('Task augmentation')
+plt.show()
